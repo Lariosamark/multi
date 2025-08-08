@@ -36,7 +36,7 @@ export default function PrintableQuotation({ quotation }: Props) {
 
       {/* Centered Logo */}
       <img 
-        src="/logo1.png" 
+        src="/logo.png" 
         alt="Company Logo" 
         className="mx-auto mb-6"
         style={{ 
@@ -46,7 +46,10 @@ export default function PrintableQuotation({ quotation }: Props) {
           display: 'block'
         }}
       />
-
+            <div className="ref-section">
+                <p><strong>Reference No:</strong> {quotation.refNo}</p>
+                <p><strong>Date:</strong> {quotation.date}</p>
+              </div>
       {/* Customer and Reference Section */}
       <div className="flex justify-between items-start mb-4">
         
