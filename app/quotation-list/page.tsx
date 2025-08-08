@@ -143,7 +143,7 @@ export default function QuotationListPage() {
                           View
                         </button>
                         <button
-                          onClick={() => router.push(`/ReviseQuotationPage/${q.id}`)}
+                          onClick={() => router.push(`/revise-quotation?id=${q.id}`)}
                           className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg hover:from-amber-600 hover:to-orange-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-sm"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
