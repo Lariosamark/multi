@@ -100,9 +100,6 @@ export default function Sidebar() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </Link>
-
-          {/* New Revise Page Link */}
-         
         </nav>
 
         {/* Footer */}
