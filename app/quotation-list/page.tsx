@@ -1,55 +1,138 @@
 'use client';
 
+import React from 'react';
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { db } from '../firebase/firebaseConfig';
 import { collection, getDocs } from 'firebase/firestore';
 import QuotationPreview from '@/app/component/QuotationPreview';
 
+type Quotation = {
+  id: string;
+  name?: string;
+  refNo?: string;
+  refNumber?: string;
+  date?: string;
+  grandTotal?: number;
+  isRevision: boolean;
+  [key: string]: any; // For any additional fields
+};
+
+type GroupedQuotation = {
+  original: Quotation | null;
+  revisions: Quotation[];
+};
+
 export default function QuotationListPage() {
-  const [quotations, setQuotations] = useState<any[]>([]);
+  const [groupedQuotations, setGroupedQuotations] = useState<GroupedQuotation[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedQuotation, setSelectedQuotation] = useState<any>(null);
+  const [selectedQuotation, setSelectedQuotation] = useState<Quotation | null>(null);
+  const [comparisonData, setComparisonData] = useState<{
+    original: Quotation | null;
+    revisions: Quotation[];
+    showComparison: boolean;
+  }>({ original: null, revisions: [], showComparison: false });
   const printRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const router = useRouter();
 
   useEffect(() => {
-    const fetchQuotations = async () => {
-      const snapshot = await getDocs(collection(db, 'quotations'));
-      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setQuotations(data);
+    const fetchAllQuotations = async () => {
+      // Fetch originals
+      const originalsSnap = await getDocs(collection(db, 'quotations'));
+      const originals: Quotation[] = originalsSnap.docs.map((doc) => ({
+        id: doc.id,
+        ...(doc.data() as Omit<Quotation, 'id' | 'isRevision'>),
+        isRevision: false,
+      }));
+
+      // Fetch revisions
+      const revisionsSnap = await getDocs(collection(db, 'quotationRevisions'));
+      const revisions: Quotation[] = revisionsSnap.docs.map((doc) => ({
+        id: doc.id,
+        ...(doc.data() as Omit<Quotation, 'id' | 'isRevision'>),
+        isRevision: true,
+      }));
+
+      // Group revisions under their original quotation by base refNo
+  const groupMap: Record<string, any> = {};
+
+// Group originals by their reference number
+originals.forEach((q) => {
+  const ref = q.refNo || q.refNumber;
+  if (typeof ref !== 'string' || !ref.trim()) return; // Skip if no valid reference number
+  if (!groupMap[ref]) {
+    groupMap[ref] = { original: q, revisions: [] };
+  } else {
+    groupMap[ref].original = q;
+  }
+});
+
+// Group revisions under their original quotation by base refNo
+revisions.forEach((r) => {
+  const revRef = r.refNo || r.refNumber;
+  if (typeof revRef !== 'string' || !revRef.trim()) return; // Skip if no valid reference number
+  const baseRef = revRef.startsWith('QR-') ? revRef.replace('QR-', 'Q-') : revRef;
+  if (!baseRef.trim()) return; // Skip if baseRef is empty
+  if (groupMap[baseRef]) {
+    groupMap[baseRef].revisions.push(r);
+  } else {
+    groupMap[baseRef] = { original: null, revisions: [r] };
+  }
+});
+      Object.values(groupMap).forEach((group: any) => {
+        group.revisions.sort((a: any, b: any) =>
+          (a.date || '') > (b.date || '') ? 1 : -1
+        );
+      });
+
+      const groupedArr = Object.values(groupMap).sort((a: any, b: any) =>
+        (b.original?.date || '') > (a.original?.date || '') ? 1 : -1
+      );
+      setGroupedQuotations(groupedArr);
     };
-    fetchQuotations();
+    fetchAllQuotations();
   }, []);
 
-  const filteredQuotations = quotations.filter((q) => {
-    const nameMatch = q.name?.toLowerCase().includes(searchTerm.toLowerCase());
-    const refMatch = q.refNo?.toLowerCase().includes(searchTerm.toLowerCase());
+  // Filter by search term
+  const filteredGroups = groupedQuotations.filter((group) => {
+    const original = group.original;
+    if (!original) return false;
+    const nameMatch = original.name?.toLowerCase().includes(searchTerm.toLowerCase());
+    const ref = original.refNo || original.refNumber || '';
+    const refMatch = ref.toLowerCase().includes(searchTerm.toLowerCase());
     return nameMatch || refMatch;
   });
 
-  const handleCloseModal = () => {
-    setSelectedQuotation(null);
-  };
+  // Extract all revisions for the revision table
+  const allRevisions = groupedQuotations.flatMap((group) =>
+    group.revisions.map((rev: any) => ({
+      ...rev,
+      originalName: group.original?.name || '',
+      originalRef: group.original?.refNo || group.original?.refNumber || '',
+    }))
+  );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-4 sm:p-6 lg:p-8">
+   <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-4 md:p-8">
+      {/* Background Elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-violet-500/5 to-pink-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+      </div>
       {/* Header Section */}
       <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
-            Quotation List
-          </h1>
-        </div>
-        <p className="text-slate-600 ml-11">Manage and view all your quotations</p>
-      </div>
-
-      {/* Search Section */}
+  <div className="flex items-center gap-3 mb-2">
+    <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
+      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+    </div>
+    <h1 className="text-3xl font-bold text-white">
+      Quotation List
+    </h1>
+  </div>
+  <p className="text-white ml-11">Manage and view all your quotations</p>
+</div>
       <div className="mb-8">
         <div className="relative max-w-md">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -67,9 +150,8 @@ export default function QuotationListPage() {
         </div>
       </div>
 
-      {/* Table Section */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 overflow-hidden">
-        {/* Desktop Table */}
+      {/* Main Quotations Table */}
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 overflow-hidden mb-12">
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
@@ -92,7 +174,7 @@ export default function QuotationListPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredQuotations.length === 0 ? (
+              {filteredGroups.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center gap-3">
@@ -109,49 +191,173 @@ export default function QuotationListPage() {
                   </td>
                 </tr>
               ) : (
-                filteredQuotations.map((q, index) => (
-                  <tr key={q.id} className="hover:bg-slate-50/50 transition-colors duration-150">
+                filteredGroups.map((group) => (
+                  <React.Fragment key={group.original?.id || group.revisions[0]?.id}>
+                    {/* Original */}
+                    
+                    {group.original && (
+                      <tr className="hover:bg-slate-50/50 transition-colors duration-150">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                              {group.original.name?.charAt(0)?.toUpperCase() || '?'}
+                            </div>
+                            <div>
+                              <p className="font-medium text-slate-800">{group.original.name}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
+                            {group.original.refNo || group.original.refNumber}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-slate-600 font-medium">{group.original.date}</td>
+                        <td className="px-6 py-4 text-right">
+                          <span className="font-bold text-slate-800 text-lg">₱ {Number(group.original.grandTotal).toFixed(2)}</span>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            <button
+                              onClick={() => setSelectedQuotation(group.original)}
+                              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-lg hover:from-emerald-600 hover:to-green-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-sm"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                              View
+                            </button>
+                            <button
+                              onClick={() => group.original?.id && router.push(`/revise-quotation?id=${group.original.id}`)}
+                              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg hover:from-amber-600 hover:to-orange-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-sm"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                              Revise
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                    {/* Revisions */}
+                    {group.revisions.map((rev: any) => (
+                      <tr key={rev.id} className="bg-purple-50 hover:bg-purple-100/60 transition-colors duration-150">
+                        <td className="px-10 py-4 border-l-4 border-purple-400">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-purple-300 rounded-full flex items-center justify-center text-white font-semibold text-xs">
+                              {rev.name?.charAt(0)?.toUpperCase() || '?'}
+                            </div>
+                            <div>
+                              <p className="font-medium text-purple-900">{rev.name || group.original?.name}</p>
+                              <span className="text-xs text-purple-700">Revision</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                            {rev.refNumber || rev.refNo}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-purple-700 font-medium">{rev.date}</td>
+                        <td className="px-6 py-4 text-right">
+                          <span className="font-bold text-purple-900 text-lg">₱ {Number(rev.grandTotal).toFixed(2)}</span>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <button
+                            onClick={() => setSelectedQuotation(rev)}
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-700 text-white rounded-lg hover:from-purple-600 hover:to-purple-800 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-sm"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            View
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </React.Fragment>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Revisions Table */}
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 overflow-hidden mt-8">
+        <div className="hidden md:block overflow-x-auto">
+          <h2 className="px-6 pt-6 pb-2 text-lg font-bold text-purple-700">Quotation Revisions</h2>
+          <table className="w-full">
+            <thead className="bg-gradient-to-r from-purple-50 to-purple-100 border-b border-purple-200">
+              <tr>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-purple-700 uppercase tracking-wider">
+                  Customer Name
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-purple-700 uppercase tracking-wider">
+                  Revision Ref No.
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-purple-700 uppercase tracking-wider">
+                  Original Ref No.
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-purple-700 uppercase tracking-wider">
+                  Date
+                </th>
+                <th className="px-6 py-4 text-right text-sm font-semibold text-purple-700 uppercase tracking-wider">
+                  Grand Total
+                </th>
+                <th className="px-6 py-4 text-center text-sm font-semibold text-purple-700 uppercase tracking-wider">
+                  Action
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-purple-100">
+              {allRevisions.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-purple-500">
+                    No revision quotations found.
+                  </td>
+                </tr>
+              ) : (
+                allRevisions.map((rev) => (
+                  <tr key={rev.id} className="hover:bg-purple-50 transition-colors duration-150">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                          {q.name?.charAt(0)?.toUpperCase() || '?'}
+                        <div className="w-8 h-8 bg-purple-300 rounded-full flex items-center justify-center text-white font-semibold text-xs">
+                          {rev.name?.charAt(0)?.toUpperCase() || '?'}
                         </div>
                         <div>
-                          <p className="font-medium text-slate-800">{q.name}</p>
+                          <p className="font-medium text-purple-900">{rev.name || rev.originalName}</p>
                         </div>
                       </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                        {rev.refNumber || rev.refNo}
+                      </span>
                     </td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
-                        {q.refNo}
+                        {rev.originalRef}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-slate-600 font-medium">{q.date}</td>
+                    <td className="px-6 py-4 text-purple-700 font-medium">{rev.date}</td>
                     <td className="px-6 py-4 text-right">
-                      <span className="font-bold text-slate-800 text-lg">₱ {Number(q.grandTotal).toFixed(2)}</span>
+                      <span className="font-bold text-purple-900 text-lg">₱ {Number(rev.grandTotal).toFixed(2)}</span>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <button
-                          onClick={() => setSelectedQuotation(q)}
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-lg hover:from-emerald-600 hover:to-green-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-sm"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
-                          View
-                        </button>
-                        <button
-                          onClick={() => router.push(`/revise-quotation?id=${q.id}`)}
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg hover:from-amber-600 hover:to-orange-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-sm"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                          Revise
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => setSelectedQuotation(rev)}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-700 text-white rounded-lg hover:from-purple-600 hover:to-purple-800 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-sm"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        View
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -159,77 +365,15 @@ export default function QuotationListPage() {
             </tbody>
           </table>
         </div>
-
-        {/* Mobile Cards */}
-        <div className="md:hidden space-y-4 p-4">
-          {filteredQuotations.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="flex flex-col items-center gap-3">
-                <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center">
-                  <svg className="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-slate-600 font-medium">No quotations found</p>
-                  <p className="text-slate-400 text-sm">Try adjusting your search terms</p>
-                </div>
-              </div>
-            </div>
-          ) : (
-            filteredQuotations.map((q) => (
-              <div key={q.id} className="bg-white rounded-xl shadow-md border border-slate-200 p-4 hover:shadow-lg transition-shadow duration-200">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                      {q.name?.charAt(0)?.toUpperCase() || '?'}
-                    </div>
-                    <div>
-                      <p className="font-semibold text-slate-800">{q.name}</p>
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
-                        {q.refNo}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="space-y-2 mb-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-500 text-sm">Date</span>
-                    <span className="font-medium text-slate-700">{q.date}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-500 text-sm">Grand Total</span>
-                    <span className="font-bold text-slate-800 text-lg">₱ {Number(q.grandTotal).toFixed(2)}</span>
-                  </div>
-                </div>
-                
-                <div className="flex gap-2 mt-4">
-                  <button
-                    onClick={() => setSelectedQuotation(q)}
-                    className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-lg hover:from-emerald-600 hover:to-green-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                    View
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
       </div>
 
-      {/* Modal */}
       {selectedQuotation && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex justify-center items-center p-4">
           <div className="bg-white w-full max-w-5xl max-h-[95vh] overflow-auto rounded-2xl shadow-2xl border border-white/50 relative">
             <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-slate-200 p-4 flex justify-between items-center rounded-t-2xl">
               <h2 className="font-semibold text-slate-800">Quotation Preview</h2>
               <button
-                onClick={handleCloseModal}
+                onClick={() => setSelectedQuotation(null)}
                 className="w-8 h-8 bg-slate-100 hover:bg-slate-200 rounded-full flex items-center justify-center text-slate-600 hover:text-slate-800 transition-all duration-200"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -241,8 +385,8 @@ export default function QuotationListPage() {
               <QuotationPreview quotation={selectedQuotation} />
             </div>
           </div>
-        </div>
+          </div>
       )}
-    </div>
+      </div>
   );
 }

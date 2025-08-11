@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { db } from '../firebase/firebaseConfig';
+import { db } from '@/app/firebase/firebaseConfig';
 import {
   collection,
   addDoc,
@@ -46,7 +46,7 @@ export default function QuotationForm() {
       const snapshot = await getDocs(qRef);
       const count = snapshot.size + 1;
 
-      const newRefNo = `${yyyymm}-${String(count).padStart(3, '0')}`;
+      const newRefNo = `Q-${yyyymm}-${String(count).padStart(3, '0')}`;
       setRefNo(newRefNo);
 
       const dateString = now.toLocaleDateString('en-CA'); // YYYY-MM-DD
@@ -213,8 +213,14 @@ const handleItemChange = (index: number, field: keyof QuotationItem, value: stri
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-4 md:p-8">
-      <div className="max-w-5xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-4 md:p-8">
+      {/* Background Elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-violet-500/5 to-pink-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+      </div>
+
+      <div className="relative max-w-5xl mx-auto">
         {/* Header Section */}
         <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-8">
           <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 px-6 md:px-8 py-6">
