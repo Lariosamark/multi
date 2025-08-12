@@ -103,7 +103,7 @@ export default function Sidebar() {
           </div>
 
           <Link
-            href="/QoutationForm/page"
+            href="/component/QuotationForm"
             className="group relative flex items-center gap-4 px-6 py-5 rounded-2xl hover:bg-white/5 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-500/10 border border-transparent hover:border-white/10"
             onClick={() => setIsOpen(false)}
           >
@@ -150,7 +150,7 @@ export default function Sidebar() {
           </Link>
 
           <Link
-            href="/quotation-list"
+            href="/component/quotation-list"
             className="group relative flex items-center gap-4 px-6 py-5 rounded-2xl hover:bg-white/5 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-emerald-500/10 border border-transparent hover:border-white/10"
             onClick={() => setIsOpen(false)}
           >

@@ -12,6 +12,7 @@ import {
 } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 
+
 export default function QuotationForm() {
   const router = useRouter();
   const [refNo, setRefNo] = useState('');
@@ -209,17 +210,24 @@ const handleItemChange = (index: number, field: keyof QuotationItem, value: stri
     
     await addDoc(collection(db, 'quotations'), submissionData);
     alert('Quotation saved!');
-    router.push('/quotation-list');
+    router.push('/component/quotation-list');
+
+    
+    
+
   };
 
   return (
+    
+    
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-4 md:p-8">
       {/* Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
+
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-violet-500/5 to-pink-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
       </div>
-
+        
       <div className="relative max-w-5xl mx-auto">
         {/* Header Section */}
         <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-8">
@@ -588,7 +596,7 @@ const handleItemChange = (index: number, field: keyof QuotationItem, value: stri
             <div className="flex flex-col sm:flex-row gap-4 sm:justify-end">
               <button
                 type="button"
-                onClick={() => router.push('/quotation-list')}
+                onClick={() => router.push('/component/quotation-list')}
                 className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
               >
                 Cancel

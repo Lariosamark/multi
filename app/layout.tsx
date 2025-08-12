@@ -1,5 +1,5 @@
 import './globals.css';
-import Sidebar from '@/app/component/Sidebar';
+import React from 'react';
 import Script from 'next/script';
 
 export const metadata = {
@@ -16,6 +16,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"
           strategy="beforeInteractive"
         />
+
       </head>
       <body className="flex min-h-screen bg-gray-50">
         <main className="flex-1 p-6">{children}</main>

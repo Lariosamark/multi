@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { auth } from '@/app/firebase/firebaseConfig'; // adjust path accordingly
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
-import Sidebar from '@/app/component/Sidebar';
+import Sidebar from '@/app/employee/dashboard/Sidebar';
 
 export default function EmployeeDashboard() {
   const router = useRouter();
@@ -19,10 +19,6 @@ export default function EmployeeDashboard() {
     }
   }, [router]);
 
-  const handleLogout = async () => {
-    await signOut(auth);
-    router.push('/login');
-  };
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-indigo-700 via-purple-700 to-pink-700 text-white">
@@ -36,12 +32,6 @@ export default function EmployeeDashboard() {
           Your account is approved. You can now access your dashboard.
         </p>
 
-        <button
-          onClick={handleLogout}
-          className="px-6 py-3 bg-red-600 hover:bg-red-500 rounded-lg shadow-lg transition"
-        >
-          Logout
-        </button>
       </main>
     </div>
   );

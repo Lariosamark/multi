@@ -15,12 +15,6 @@ export default function LandingPage() {
           >
             Login
           </Link>
-          <Link
-            href="/register"
-            className="px-4 py-2 bg-white text-indigo-900 rounded hover:bg-indigo-200 transition"
-          >
-            Register
-          </Link>
         </div>
       </nav>
 
@@ -35,22 +29,16 @@ export default function LandingPage() {
           </p>
           <div className="flex gap-6">
             <Link
-              href="/LoginPage"
+              href="/login"
               className="px-8 py-3 bg-yellow-400 text-indigo-900 font-semibold rounded shadow hover:bg-yellow-300 transition"
-            >
+            >  
               Get Started
-            </Link>
-            <a
-              href="#features"
-              className="px-8 py-3 border border-yellow-400 rounded hover:bg-yellow-400 hover:text-indigo-900 transition cursor-pointer"
-            >
-              Learn More
-            </a>
+            </Link>       
           </div>
         </div>
         <div className="max-w-md">
           <img
-            src="/landing-hero.svg"
+            src="/logo.png"
             alt="Quotation management illustration"
             className="w-full"
             loading="lazy"

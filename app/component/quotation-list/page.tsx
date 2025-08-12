@@ -3,7 +3,7 @@
 import React from 'react';
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { db } from '../firebase/firebaseConfig';
+import { db } from '@/app/firebase/firebaseConfig';
 import { collection, getDocs } from 'firebase/firestore';
 import QuotationPreview from '@/app/component/QuotationPreview';
 

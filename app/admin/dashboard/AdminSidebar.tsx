@@ -87,7 +87,7 @@ export default function AdminSidebar() {
           </p>
 
           <Link
-            href="/QuotationForm"
+            href="/component/QuotationForm"
             className="group flex items-center gap-6 px-6 py-6 rounded-2xl hover:bg-slate-800/50 transition-all duration-200 hover:translate-x-1 border border-transparent hover:border-slate-700/30"
             onClick={() => setIsOpen(false)}
           >
@@ -117,7 +117,7 @@ export default function AdminSidebar() {
           </Link>
 
           <Link
-            href="/quotation-list"
+            href="/component/quotation-list"
             className="group flex items-center gap-6 px-6 py-6 rounded-2xl hover:bg-slate-800/50 transition-all duration-200 hover:translate-x-1 border border-transparent hover:border-slate-700/30"
             onClick={() => setIsOpen(false)}
           >
@@ -147,7 +147,7 @@ export default function AdminSidebar() {
           </Link>
 
           <Link
-            href="/manage-users"
+            href="/component/manage-users"
             className="group flex items-center gap-6 px-6 py-6 rounded-2xl hover:bg-slate-800/50 transition-all duration-200 hover:translate-x-1 border border-transparent hover:border-slate-700/30"
             onClick={() => setIsOpen(false)}
           >
@@ -172,36 +172,6 @@ export default function AdminSidebar() {
               </span>
               <p className="text-sm text-slate-500 group-hover:text-slate-400">
                 Approve or Decline user requests
-              </p>
-            </div>
-          </Link>
-
-          <Link
-            href="/activity-log"
-            className="group flex items-center gap-6 px-6 py-6 rounded-2xl hover:bg-slate-800/50 transition-all duration-200 hover:translate-x-1 border border-transparent hover:border-slate-700/30"
-            onClick={() => setIsOpen(false)}
-          >
-            <div className="w-14 h-14 bg-slate-800 rounded-xl flex items-center justify-center group-hover:bg-red-600/20 transition-colors shadow-lg">
-              <svg
-                className="w-7 h-7 text-slate-400 group-hover:text-red-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
-            </div>
-            <div className="flex-1">
-              <span className="font-semibold text-lg text-slate-300 group-hover:text-white block mb-1">
-                Activity Log
-              </span>
-              <p className="text-sm text-slate-500 group-hover:text-slate-400">
-                Track admin and user actions
               </p>
             </div>
           </Link>
