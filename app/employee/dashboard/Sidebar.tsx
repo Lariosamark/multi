@@ -102,6 +102,69 @@ export default function Sidebar() {
             <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent flex-1"></div>
           </div>
 
+
+           <Link
+    href="/project"
+    className="group flex items-center gap-6 px-6 py-6 rounded-2xl hover:bg-slate-800/50 transition-all duration-200 hover:translate-x-1 border border-transparent hover:border-slate-700/30"
+    onClick={() => setIsOpen(false)}
+  >
+    <div className="w-14 h-14 bg-slate-800 rounded-xl flex items-center justify-center group-hover:bg-indigo-600/20 transition-colors shadow-lg">
+      <svg
+        className="w-7 h-7 text-slate-400 group-hover:text-indigo-400"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M3 7l9-4 9 4-9 4-9-4zm0 6l9-4 9 4M3 13v6l9 4 9-4v-6"
+        />
+      </svg>
+    </div>
+    <div className="flex-1">
+      <span className="font-semibold text-lg text-slate-300 group-hover:text-white block mb-1">
+        New Project
+      </span>
+      <p className="text-sm text-slate-500 group-hover:text-slate-400">
+        Create and manage projects
+      </p>
+    </div>
+  </Link>
+
+
+          <Link
+  href="/save-projects"
+  className="group flex items-center gap-6 px-6 py-6 rounded-2xl hover:bg-slate-800/50 transition-all duration-200 hover:translate-x-1 border border-transparent hover:border-slate-700/30"
+  onClick={() => setIsOpen(false)}
+>
+  <div className="w-14 h-14 bg-slate-800 rounded-xl flex items-center justify-center group-hover:bg-purple-600/20 transition-colors shadow-lg">
+    <svg
+      className="w-7 h-7 text-slate-400 group-hover:text-purple-400"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M4 6h16M4 12h16M4 18h16"
+      />
+    </svg>
+  </div>
+    <div className="flex-1">
+    <span className="font-semibold text-lg text-slate-300 group-hover:text-white block mb-1">
+      Save Project
+    </span>
+    <p className="text-sm text-slate-500 group-hover:text-slate-400">
+      View saved projects & linked forms
+    </p>
+  </div>
+  </Link>
+
+
           <Link
             href="/component/QuotationForm"
             className="group relative flex items-center gap-4 px-6 py-5 rounded-2xl hover:bg-white/5 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-500/10 border border-transparent hover:border-white/10"

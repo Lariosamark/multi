@@ -1,6 +1,7 @@
 import './globals.css';
 import React from 'react';
 import Script from 'next/script';
+import AdminHeader from '@/app/component/AdminHeader'
 
 export const metadata = {
   title: 'QMS | Multifactors Sales',
